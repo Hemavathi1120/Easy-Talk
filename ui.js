@@ -2,6 +2,7 @@ class UISystem {
     constructor() {
         this.init();
         this.setupMobileNavigation();
+        this.setupBackButton();  // Add this line
     }
 
     init() {
@@ -392,7 +393,9 @@ class UISystem {
         const chatArea = document.querySelector('.chat-area');
         const usersPage = document.querySelector('.users-page');
 
+        // Add slide-out animation
         if (chatArea) {
+            chatArea.style.transition = 'transform 0.3s ease-out';
             chatArea.style.transform = 'translateX(100%)';
             setTimeout(() => {
                 chatArea.style.display = 'none';
@@ -401,14 +404,23 @@ class UISystem {
             }, 300);
         }
 
+        // Show users page with animation
         if (usersPage) {
             usersPage.style.display = 'block';
             usersPage.style.transform = 'translateX(-100%)';
             setTimeout(() => {
                 usersPage.style.transform = '';
-                // Refresh chats when going back
-                this.loadRecentChats();
+                // Refresh the users list
+                if (window.chatSystem) {
+                    window.chatSystem.loadUsers();
+                }
             }, 50);
+        }
+
+        // Clear the active chat area
+        const messagesContainer = document.getElementById('messagesContainer');
+        if (messagesContainer) {
+            messagesContainer.innerHTML = '';
         }
     }
 
@@ -582,6 +594,18 @@ class UISystem {
         }
 
         // ...rest of the event listeners...
+    }
+
+    // Add this new method
+    setupBackButton() {
+        const backButton = document.getElementById('backToUsers');
+        if (backButton) {
+            backButton.addEventListener('click', () => {
+                if (window.innerWidth <= 768) {
+                    this.goBackToUsers();
+                }
+            });
+        }
     }
 }
 

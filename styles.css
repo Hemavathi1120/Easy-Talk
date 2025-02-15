@@ -368,22 +368,10 @@ body.dark-mode {
     display: flex;
     align-items: flex-start;
     gap: 0.5rem;
-    max-width: 75%;
-    margin: 0.5rem 0;
-    animation: messageAppear 0.3s ease;
-    max-width: 75%;
-    margin: 0.25rem 0;
-    clear: both;
-    display: flex;
-    flex-direction: column;
-    max-width: 75%;
-    animation: messageAppear 0.3s ease;
-    clear: both;
-    margin: 0.5rem 0;
+    max-width: 60%;  /* Reduced from 65% */
+    margin: 0.4rem 0;
     position: relative;
-    display: flex;
-    align-items: flex-end;
-    gap: 0.5rem;
+    animation: messageAppear 0.3s ease;
 }
 
 .message:hover {
@@ -414,22 +402,13 @@ body.dark-mode {
 }
 
 .message-bubble {
-    padding: 0.8rem 1.2rem;
-    border-radius: 16px;
+    padding: 0.6rem 1rem;  /* Reduced padding */
+    border-radius: 12px;   /* Reduced border radius */
     position: relative;
-    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
-    transition: background-color var(--transition-timing),
-                box-shadow var(--transition-timing),
-                transform 0.2s ease;
-    word-break: break-word;
-    white-space: pre-wrap;
-    padding: 1rem 1.2rem;
-    border-radius: 16px;
-    position: relative;
+    min-width: 40px;      /* Reduced minimum width */
     max-width: 100%;
+    word-break: break-word;
     box-shadow: var(--bubble-shadow-light);
-    transition: all 0.3s ease;
-    min-width: 80px;
 }
 
 .message.outgoing .message-bubble {
@@ -444,7 +423,7 @@ body.dark-mode {
     background: linear-gradient(135deg, var(--accent-color), var(--primary-color));
     color: white;
     border-bottom-right-radius: 4px;
-    margin-right: 8px;
+    margin-right: 4px;  /* Reduced margin */
 }
 
 .message.incoming .message-bubble {
@@ -457,8 +436,8 @@ body.dark-mode {
     color: var(--text-light);
     border-bottom-left-radius: 4px;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-    margin-left: 8px;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+    margin-left: 4px;  /* Reduced margin */
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);  /* Lighter shadow */
 }
 
 .message-content {
@@ -467,14 +446,12 @@ body.dark-mode {
 
 .message-text {
     font-size: 0.95rem;
-    line-height: 1.4;
+    line-height: 1.3;  /* Reduced line height */
     margin-bottom: 0.2rem;
+    overflow-wrap: break-word;
     word-wrap: break-word;
-    font-size: 0.95rem;
-    line-height: 1.5;
-    word-wrap: break-word;
-    white-space: pre-wrap;
-    margin-bottom: 0.3rem;
+    hyphens: auto;
+    max-width: 100%;
 }
 
 .message-metadata {
@@ -494,7 +471,7 @@ body.dark-mode {
     gap: 0.4rem;
     font-size: 0.7rem;
     opacity: 0.8;
-    margin-top: 0.2rem;
+    margin-top: 0.1rem;  /* Reduced margin */
 }
 
 .message-time {
@@ -853,7 +830,7 @@ body.dark-mode {
     }
 
     .message {
-        max-width: 85%;
+        max-width: 75%;  /* Adjusted for mobile */
     }
     
     .message-input {
@@ -993,12 +970,18 @@ body.dark-mode {
     }
 
     #messagesContainer {
-        padding-bottom: 100px;
+        padding-bottom: 50px;
         height: calc(100vh - 180px); /* Adjust for mobile header and input */
+        padding: 0.8rem;  /* Reduced padding */
+        gap: 0.4rem;     /* Reduced gap between messages */
     }
 
     .message {
-        max-width: 85%;
+        max-width: 80%; /* Slightly wider on mobile */
+    }
+
+    .message-bubble {
+        padding: 0.5rem 0.8rem;  /* Even smaller padding on mobile */
     }
 
     .message-actions {
@@ -1820,4 +1803,41 @@ body.dark-mode {
 
 .dark-mode .no-chat-selected {
     color: var(--text-dark);
+}
+
+.back-btn {
+    display: none;  /* Hidden by default on desktop */
+    background: none;
+    border: none;
+    color: inherit;
+    padding: 8px;
+    cursor: pointer;
+    transition: transform 0.2s ease;
+}
+
+.back-btn:hover {
+    transform: scale(1.1);
+}
+
+.back-btn:active {
+    transform: scale(0.95);
+}
+
+@media (max-width: 768px) {
+    .back-btn {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.2rem;
+        color: white;
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        background: rgba(255, 255, 255, 0.1);
+    }
+
+    .chat-header {
+        grid-template-columns: auto auto 1fr !important;
+        padding: 0.8rem;
+    }
 }
