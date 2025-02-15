@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Easy Talk</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+
+<body>
+    <!-- Auth Container -->
+    <div id="authContainer" class="container">
+        <div class="auth-box">
+            <h2>Welcome to Easy talk</h2>
+            <div class="auth-tabs">
+                <button class="tab-btn active" data-tab="login">Login</button>
+                <button class="tab-btn" data-tab="signup">Sign Up</button>
+            </div>
+
+            <div class="alert hidden" id="authAlert"></div>
+
+            <!-- Login Form -->
+            <form id="loginForm" class="auth-form">
+                <input type="email" id="loginEmail" placeholder="Email" required>
+                <input type="password" id="loginPassword" placeholder="Password" required>
+                <button type="submit" class="auth-submit">Login</button>
+            </form>
+
+            <!-- Signup Form -->
+            <form id="signupForm" class="auth-form hidden">
+                <input type="text" id="signupUsername" placeholder="Username" required>
+                <input type="email" id="signupEmail" placeholder="Email" required>
+                <input type="password" id="signupPassword" placeholder="Password" required>
+                <button type="submit" class="auth-submit">Sign Up</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Main App Container -->
+    <div id="appContainer" class="container hidden">
+        <!-- Sidebar -->
+        <div class="sidebar">
+            <!-- User Profile -->
+            <div class="profile-section">
+                <div class="profile-info">
+                    <img id="userAvatar" src="./assets/default-avatar.png" alt="Profile">
+                    <span id="userName">Anonymous</span>
+                </div>
+            </div>
+
+            <!-- Chat List -->
+            <div class="chat-list">
+                <div class="search-box">
+                    <input type="text" id="searchInput" placeholder="Search or start new chat">
+                </div>
+                <div id="chatsList"></div>
+            </div>
+        </div>
+
+        <!-- Main Chat Area -->
+        <div class="chat-area">
+            <!-- Action Buttons -->
+            <div class="action-buttons">
+                <button id="logoutBtn">
+                    <i class="fas fa-sign-out-alt"></i>
+                    Logout
+                </button>
+                <button id="themeToggle">🌙</button>
+            </div>
+
+            <div id="noChatSelected" class="no-chat-selected">
+                <h2>Select a chat to start messaging</h2>
+            </div>
+
+            <div id="activeChat" class="hidden">
+                <!-- Chat Header -->
+                <div class="chat-header">
+                    <img id="activeChatAvatar" src="./assets/default-avatar.png" alt="Chat">
+                    <div class="chat-info">
+                        <h3 id="activeChatName"></h3>
+                        <span id="chatStatus"></span>
+                    </div>
+                </div>
+
+                <!-- Messages Container -->
+                <div id="messagesContainer"></div>
+
+                <!-- Message Input -->
+                <div class="message-input">
+                    <label for="fileInput" class="attachment-btn">📎</label>
+                    <input type="file" id="fileInput" hidden>
+                    <input type="text" id="messageInput" placeholder="Type a message">
+                    <button id="sendMessage">Send</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add before closing body tag -->
+    <div class="mobile-nav">
+        <a href="#" class="nav-button active" id="chatsTab">
+            <i class="fas fa-comments"></i>
+            <span>Chats</span>
+        </a>
+        <a href="#" class="nav-button" id="usersTab">
+            <i class="fas fa-users"></i>
+            <span>Users</span>
+        </a>
+        <a href="#" class="nav-button" id="profileTab">
+            <i class="fas fa-user"></i>
+            <span>Profile</span>
+        </a>
+    </div>
+
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-storage.js"></script>
+
+    <!-- App Scripts -->
+    <script src="config.js"></script>
+    <script src="auth.js"></script>
+    <script src="chat.js"></script>
+    <script src="ui.js"></script>
+</body>
+
+</html>
