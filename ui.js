@@ -2,7 +2,8 @@ class UISystem {
     constructor() {
         this.init();
         this.setupMobileNavigation();
-        this.setupBackButton();  // Add this line
+        this.setupBackButton();
+        this.setupProfileButton();  // Add this line
     }
 
     init() {
@@ -481,21 +482,23 @@ class UISystem {
                                     <p>${userData.status || 'Available'}</p>
                                 </div>
                             </div>
-                            <button class="edit-profile-btn">Edit Profile</button>
+                            <button class="edit-profile-btn">
+                                <i class="fas fa-edit"></i> Edit Profile
+                            </button>
                         </div>
                     </div>
                 `;
 
                 document.body.appendChild(modal);
 
-                // Improved close button handling
+                // Setup modal event listeners
                 const closeBtn = modal.querySelector('.close-modal');
+                const editBtn = modal.querySelector('.edit-profile-btn');
+
                 const closeModal = () => {
                     modal.classList.add('fade-out');
                     setTimeout(() => {
                         modal.remove();
-                        // Show users page when modal closes
-                        this.showUsersPage();
                     }, 300);
                 };
 
@@ -503,7 +506,105 @@ class UISystem {
                 modal.addEventListener('click', (e) => {
                     if (e.target === modal) closeModal();
                 });
+
+                editBtn.addEventListener('click', () => {
+                    this.showEditProfileForm(modal);
+                });
+            })
+            .catch(error => {
+                console.error("Error loading profile:", error);
+                window.showAlert('Error loading profile', 'error');
             });
+    }
+
+    async showEditProfileForm(modal) {
+        const profileContent = modal.querySelector('.profile-content');
+        const currentUser = firebase.auth().currentUser;
+        
+        try {
+            const doc = await firebase.firestore().collection('users').doc(currentUser.uid).get();
+            const userData = doc.data();
+            
+            const editForm = document.createElement('div');
+            editForm.className = 'edit-profile-form';
+            editForm.innerHTML = `
+                <h3>Edit Profile</h3>
+                <form id="profileEditForm">
+                    <input type="text" 
+                        id="editUsername" 
+                        placeholder="Username" 
+                        value="${userData.username || ''}" 
+                        required>
+                    <select id="editStatus" required>
+                        <option value="online" ${userData.status === 'online' ? 'selected' : ''}>Online</option>
+                        <option value="away" ${userData.status === 'away' ? 'selected' : ''}>Away</option>
+                        <option value="busy" ${userData.status === 'busy' ? 'selected' : ''}>Busy</option>
+                    </select>
+                    <div class="edit-actions">
+                        <button type="submit" class="save-profile">
+                            <i class="fas fa-check"></i> Save Changes
+                        </button>
+                        <button type="button" class="cancel-edit">
+                            <i class="fas fa-times"></i> Cancel
+                        </button>
+                    </div>
+                </form>
+            `;
+            
+            profileContent.appendChild(editForm);
+            
+            // Setup form submission handler
+            const form = editForm.querySelector('#profileEditForm');
+            const cancelBtn = editForm.querySelector('.cancel-edit');
+            
+            form.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                await this.handleProfileUpdate(currentUser.uid, form, modal);
+            });
+
+            cancelBtn.addEventListener('click', () => {
+                editForm.remove();
+            });
+
+        } catch (error) {
+            console.error("Error showing edit form:", error);
+            window.showAlert('Error loading profile data', 'error');
+        }
+    }
+
+    async handleProfileUpdate(userId, form, modal) {
+        const username = form.querySelector('#editUsername').value.trim();
+        const status = form.querySelector('#editStatus').value;
+
+        if (!username) {
+            window.showAlert('Username cannot be empty', 'error');
+            return;
+        }
+
+        try {
+            // Update the user profile in Firestore
+            await firebase.firestore().collection('users').doc(userId).update({
+                username,
+                status,
+                updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+            });
+
+            // Update UI elements
+            document.getElementById('userName').textContent = username;
+            
+            // Remove the edit form and modal
+            modal.remove();
+            
+            // Show success message
+            window.showAlert('Profile updated successfully!', 'success');
+            
+            // Refresh the profile modal to show updated information
+            this.showProfileModal();
+
+        } catch (error) {
+            console.error("Error updating profile:", error);
+            window.showAlert('Failed to update profile', 'error');
+        }
     }
 
     setupProfileModalHandlers(modal) {
@@ -516,57 +617,6 @@ class UISystem {
         if (editBtn) {
             editBtn.addEventListener('click', () => this.showEditProfileForm(modal));
         }
-    }
-
-    showEditProfileForm(modal) {
-        const profileContent = modal.querySelector('.profile-content');
-        const currentUser = firebase.auth().currentUser;
-        
-        firebase.firestore().collection('users').doc(currentUser.uid).get()
-            .then(doc => {
-                const userData = doc.data();
-                const editForm = document.createElement('div');
-                editForm.className = 'edit-profile-form';
-                editForm.innerHTML = `
-                    <h3>Edit Profile</h3>
-                    <input type="text" id="editUsername" placeholder="Username" value="${userData.username || ''}">
-                    <select id="editStatus">
-                        <option value="online" ${userData.status === 'online' ? 'selected' : ''}>Online</option>
-                        <option value="away" ${userData.status === 'away' ? 'selected' : ''}>Away</option>
-                        <option value="busy" ${userData.status === 'busy' ? 'selected' : ''}>Busy</option>
-                    </select>
-                    <div class="edit-actions">
-                        <button class="save-profile">Save Changes</button>
-                        <button class="cancel-edit">Cancel</button>
-                    </div>
-                `;
-                
-                profileContent.appendChild(editForm);
-                this.setupEditFormHandlers(editForm, currentUser.uid);
-            });
-    }
-
-    setupEditFormHandlers(form, userId) {
-        form.querySelector('.save-profile').addEventListener('click', async () => {
-            const username = form.querySelector('#editUsername').value.trim();
-            const status = form.querySelector('#editStatus').value;
-
-            try {
-                await firebase.firestore().collection('users').doc(userId).update({
-                    username,
-                    status
-                });
-                document.getElementById('userName').textContent = username;
-                showAlert('Profile updated successfully!', 'success');
-                form.remove();
-            } catch (error) {
-                showAlert('Failed to update profile', 'error');
-            }
-        });
-
-        form.querySelector('.cancel-edit').addEventListener('click', () => {
-            form.remove();
-        });
     }
 
     // Add cleanup method
@@ -604,6 +654,16 @@ class UISystem {
                 if (window.innerWidth <= 768) {
                     this.goBackToUsers();
                 }
+            });
+        }
+    }
+
+    // Add this new method
+    setupProfileButton() {
+        const profileBtn = document.getElementById('profileBtn');
+        if (profileBtn) {
+            profileBtn.addEventListener('click', () => {
+                this.showProfileModal();
             });
         }
     }
