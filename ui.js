@@ -446,7 +446,7 @@ class UISystem {
     showProfileModal() {
         const currentUser = firebase.auth().currentUser;
         if (!currentUser) return;
-
+    
         const modal = document.createElement('div');
         modal.className = 'profile-modal';
         
@@ -455,16 +455,16 @@ class UISystem {
                 const userData = doc.data();
                 modal.innerHTML = `
                     <div class="profile-content">
-                        <div class="profile-header">
-                            <h2>Profile</h2>
-                            <button class="close-modal" aria-label="Close">
-                                <i class="fas fa-times"></i>
-                            </button>
-                        </div>
+                        <button class="close-modal" id="closeProfileModal">
+                            <i class="fas fa-times"></i>
+                        </button>
                         <div class="profile-body">
-                            <div class="profile-avatar">
-                                <img src="${userData.photoURL || 'default-avatar.png'}" alt="Profile">
-                                <button class="change-avatar">
+                            <div class="profile-avatar-container">
+                                <img src="${userData.photoURL || './assets/default-avatar.png'}" 
+                                     alt="Profile" 
+                                     class="profile-avatar-img"
+                                     id="profileAvatar">
+                                <button class="change-avatar-btn" id="changeAvatarBtn">
                                     <i class="fas fa-camera"></i>
                                 </button>
                             </div>
@@ -488,28 +488,25 @@ class UISystem {
                         </div>
                     </div>
                 `;
-
+    
                 document.body.appendChild(modal);
 
-                // Setup modal event listeners
-                const closeBtn = modal.querySelector('.close-modal');
-                const editBtn = modal.querySelector('.edit-profile-btn');
-
-                const closeModal = () => {
-                    modal.classList.add('fade-out');
-                    setTimeout(() => {
+                // Add event listeners for closing
+                const closeBtn = modal.querySelector('#closeProfileModal');
+                if (closeBtn) {
+                    closeBtn.addEventListener('click', () => {
                         modal.remove();
-                    }, 300);
-                };
-
-                closeBtn.addEventListener('click', closeModal);
+                    });
+                }
+    
+                // Close on outside click
                 modal.addEventListener('click', (e) => {
-                    if (e.target === modal) closeModal();
+                    if (e.target === modal) {
+                        modal.remove();
+                    }
                 });
-
-                editBtn.addEventListener('click', () => {
-                    this.showEditProfileForm(modal);
-                });
+    
+                this.setupProfilePictureHandlers(modal);
             })
             .catch(error => {
                 console.error("Error loading profile:", error);
@@ -617,6 +614,48 @@ class UISystem {
         if (editBtn) {
             editBtn.addEventListener('click', () => this.showEditProfileForm(modal));
         }
+    }
+
+    setupProfilePictureHandlers(modal) {
+        const changeAvatarBtn = modal.querySelector('#changeAvatarBtn');
+        const profileAvatar = modal.querySelector('#profileAvatar');
+    
+        // Create Cloudinary upload widget
+        const uploadWidget = cloudinary.createUploadWidget({
+            cloudName: cloudinaryConfig.cloudName,
+            uploadPreset: cloudinaryConfig.uploadPreset,
+            maxFiles: 1,
+            sources: ['local', 'camera'],
+            resourceType: 'image',
+            cropping: true,
+            croppingAspectRatio: 1,
+            maxImageWidth: 400,
+            maxImageHeight: 400
+        }, async (error, result) => {
+            if (!error && result && result.event === "success") {
+                const imageUrl = result.info.secure_url;
+                try {
+                    // Update user profile in Firebase
+                    const currentUser = firebase.auth().currentUser;
+                    await firebase.firestore().collection('users').doc(currentUser.uid).update({
+                        photoURL: imageUrl
+                    });
+    
+                    // Update UI
+                    profileAvatar.src = imageUrl;
+                    document.getElementById('userAvatar').src = imageUrl;
+                    window.showAlert('Profile picture updated successfully!', 'success');
+                } catch (error) {
+                    console.error('Error updating profile picture:', error);
+                    window.showAlert('Failed to update profile picture', 'error');
+                }
+            }
+        });
+    
+        // Open Cloudinary widget on button click
+        changeAvatarBtn.addEventListener('click', () => {
+            uploadWidget.open();
+        });
     }
 
     // Add cleanup method

@@ -16,6 +16,62 @@ class ChatSystem {
                 this.clearChatState();
             }
         });
+
+        this.setupFileInput();
+    }
+
+    setupFileInput() {
+        const fileInput = document.getElementById('fileInput');
+        fileInput.addEventListener('change', async (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            try {
+                window.showAlert('Uploading file...', 'info');
+                const uploadResult = await cloudinaryUtils.uploadFile(file);
+                await this.sendMediaMessage(uploadResult);
+                window.showAlert('File uploaded successfully!', 'success');
+            } catch (error) {
+                console.error('Upload error:', error);
+                window.showAlert('Failed to upload file', 'error');
+            }
+            
+            // Clear the input
+            fileInput.value = '';
+        });
+    }
+
+    async sendMediaMessage(mediaData) {
+        if (!this.currentChatId || !this.auth.currentUser) return;
+
+        try {
+            const messageData = {
+                chatId: this.currentChatId,
+                senderId: this.auth.currentUser.uid,
+                timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+                mediaUrl: mediaData.url,
+                mediaType: mediaData.resourceType,
+                mediaFormat: mediaData.format,
+                type: 'media'
+            };
+
+            // Add message
+            const messageRef = await this.db.collection('messages').add(messageData);
+
+            // Update chat document
+            await this.db.collection('chats').doc(this.currentChatId).update({
+                lastMessage: {
+                    type: 'media',
+                    mediaType: mediaData.resourceType,
+                    timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+                    senderId: this.auth.currentUser.uid
+                },
+                lastActivity: firebase.firestore.FieldValue.serverTimestamp()
+            });
+        } catch (error) {
+            console.error('Error sending media message:', error);
+            throw error;
+        }
     }
 
     clearChatState() {
@@ -57,42 +113,32 @@ class ChatSystem {
             const currentUser = firebase.auth().currentUser;
             if (!currentUser) return;
 
-            // Create real-time listener for all users
+            const chatsList = document.getElementById('chatsList');
+            if (!chatsList) return;
+
+            // Clear existing list
+            chatsList.innerHTML = '';
+
+            // Create real-time listener for users
             this.unsubscribeUsers = this.db.collection('users')
                 .onSnapshot((snapshot) => {
-                    // Clear existing lists
-                    const chatsList = document.getElementById('chatsList');
-                    const mobileUsersList = document.getElementById('usersList');
-                    
-                    if (chatsList) chatsList.innerHTML = '';
-                    if (mobileUsersList) mobileUsersList.innerHTML = '';
-
                     snapshot.docs.forEach(doc => {
                         const userData = {
                             id: doc.id,
                             ...doc.data()
                         };
 
-                        // Don't show current user in the list
+                        // Don't show current user
                         if (userData.id !== currentUser.uid) {
-                            // Create user item for desktop
-                            if (chatsList) {
-                                const desktopItem = this.createUserListItem(userData.id, userData);
-                                chatsList.appendChild(desktopItem);
-                            }
-
-                            // Create user item for mobile
-                            if (mobileUsersList) {
-                                const mobileItem = this.createUserListItem(userData.id, userData);
-                                mobileUsersList.appendChild(mobileItem);
-                            }
+                            const userItem = this.createUserListItem(userData.id, userData);
+                            chatsList.appendChild(userItem);
                         }
                     });
                 });
 
         } catch (error) {
             console.error("Error loading users:", error);
-            showAlert('Error loading users', 'error');
+            window.showAlert('Error loading users', 'error');
         }
     }
 
@@ -142,12 +188,16 @@ class ChatSystem {
                 minute: '2-digit' 
             }) : '';
 
+        const avatarUrl = userData.photoURL || './assets/default-avatar.png';
+        
         div.innerHTML = `
-            <img src="./assets/default-avatar.png" alt="Avatar" onerror="this.src='./assets/default-avatar.png'">
+            <img src="${avatarUrl}" alt="${userData.username || 'User'}" 
+                 onerror="this.src='./assets/default-avatar.png'"
+                 style="width: 48px; height: 48px; border-radius: 50%; object-fit: cover;">
             <div class="chat-info">
                 <div class="chat-header">
                     <h4>${userData.username || 'Anonymous'}</h4>
-                    <span class="chat-time">${time}</span>
+                    ${time ? `<span class="chat-time">${time}</span>` : ''}
                 </div>
                 <p>
                     <span class="status-dot ${userData.status === 'online' ? 'online' : 'offline'}"></span>
@@ -302,20 +352,89 @@ class ChatSystem {
     }
 
     displayMessage(messageData) {
-        if (!messageData || !messageData.text) return;
+        if (!messageData) return;
 
         const div = document.createElement('div');
         const isOutgoing = messageData.senderId === this.auth.currentUser.uid;
         div.className = `message ${isOutgoing ? 'outgoing' : 'incoming'}`;
         div.dataset.messageId = messageData.id;
-        
+
         const time = messageData.timestamp ? 
             new Date(messageData.timestamp.toDate()).toLocaleTimeString([], { 
                 hour: '2-digit', 
                 minute: '2-digit' 
             }) : '';
+
+        if (messageData.type === 'media') {
+            div.innerHTML = this.createMediaMessageHTML(messageData, time, isOutgoing);
+        } else {
+            // Regular text message HTML
+            div.innerHTML = this.createTextMessageHTML(messageData, time, isOutgoing);
+        }
+
+        this.addMessageEventListeners(div, messageData);
+        this.messagesContainer.appendChild(div);
+        this.scrollToBottom();
+    }
+
+    createMediaMessageHTML(messageData, time, isOutgoing) {
+        let mediaContent = '';
         
-        div.innerHTML = `
+        switch (messageData.mediaType) {
+            case 'image':
+                mediaContent = `
+                    <img src="${messageData.mediaUrl}" alt="Image" 
+                        class="message-media" loading="lazy"
+                        onclick="window.open('${messageData.mediaUrl}', '_blank')">
+                `;
+                break;
+            case 'video':
+                mediaContent = `
+                    <video controls class="message-media">
+                        <source src="${messageData.mediaUrl}" type="video/${messageData.mediaFormat}">
+                        Your browser does not support the video tag.
+                    </video>
+                `;
+                break;
+            case 'audio':
+                mediaContent = `
+                    <audio controls class="message-media">
+                        <source src="${messageData.mediaUrl}" type="audio/${messageData.mediaFormat}">
+                        Your browser does not support the audio tag.
+                    </audio>
+                `;
+                break;
+            default:
+                mediaContent = `
+                    <div class="file-message">
+                        <i class="fas fa-file"></i>
+                        <a href="${messageData.mediaUrl}" target="_blank">View File</a>
+                    </div>
+                `;
+        }
+
+        return `
+            <div class="message-bubble">
+                ${mediaContent}
+                <div class="message-metadata">
+                    <span class="message-time">${time}</span>
+                </div>
+            </div>
+            <div class="message-actions">
+                <button class="action-btn copy-btn" title="Copy Link">
+                    <i class="fas fa-link"></i>
+                </button>
+                ${isOutgoing ? `
+                    <button class="action-btn delete-btn" title="Delete">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                ` : ''}
+            </div>
+        `;
+    }
+
+    createTextMessageHTML(messageData, time, isOutgoing) {
+        return `
             <div class="message-bubble">
                 <div class="message-text">${utils.escapeHtml(messageData.text)}</div>
                 <div class="message-metadata">
@@ -337,10 +456,6 @@ class ChatSystem {
                 ` : ''}
             </div>
         `;
-
-        this.addMessageEventListeners(div, messageData);
-        this.messagesContainer.appendChild(div);
-        this.scrollToBottom();
     }
 
     shouldAddTimeDivider(messageDate) {
