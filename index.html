@@ -46,7 +46,13 @@
             <div class="profile-section">
                 <div class="profile-info">
                     <img id="userAvatar" src="./assets/default-avatar.png" alt="Profile">
-                    <span id="userName">Anonymous</span>
+                    <div class="profile-info-text">
+                        <span id="userName">Anonymous</span>
+                        <span class="user-status">
+                            <span class="status-indicator"></span>
+                            <span class="status-text">Online</span>
+                        </span>
+                    </div>
                 </div>
             </div>
 
@@ -63,6 +69,10 @@
         <div class="chat-area">
             <!-- Action Buttons -->
             <div class="action-buttons">
+                <button id="profileBtn" class="profile-btn">
+                    <i class="fas fa-user"></i>
+                    Profile
+                </button>
                 <button id="logoutBtn">
                     <i class="fas fa-sign-out-alt"></i>
                     Logout
