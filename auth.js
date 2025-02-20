@@ -57,9 +57,16 @@ class AuthSystem {
                 
                 const userData = await this.getUserData(user.uid);
                 if (userData) {
+                    // Update username
                     document.getElementById('userName').textContent = userData.username;
-                    if (userData.photoURL) {
-                        document.getElementById('userAvatar').src = userData.photoURL;
+                    
+                    // Update avatar
+                    const userAvatar = document.getElementById('userAvatar');
+                    if (userAvatar && userData.photoURL) {
+                        userAvatar.src = userData.photoURL;
+                        userAvatar.onerror = () => {
+                            userAvatar.src = './assets/default-avatar.png';
+                        };
                     }
                 }
 
