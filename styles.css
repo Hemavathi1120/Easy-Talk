@@ -227,6 +227,7 @@ body.dark-mode {
     flex: 1;
     position: relative;
     z-index: 1;
+    min-width: 0; /* Prevent text overflow */
 }
 
 .profile-info-text {
@@ -395,10 +396,14 @@ body.dark-mode {
     right: 1rem;
     display: flex;
     gap: 0.8rem;
-    z-index: 10;
+    z-index: 1050; /* Increased z-index to ensure visibility */
+    background: rgba(255, 255, 255, 0.1);
+    padding: 0.5rem;
+    border-radius: 12px;
+    backdrop-filter: blur(8px);
 }
 
-#logoutBtn, #themeToggle {
+#logoutBtn, #themeToggle, #profileBtn {
     padding: 0.6rem 1.2rem;
     border: none;
     border-radius: 20px;
@@ -411,11 +416,7 @@ body.dark-mode {
     align-items: center;
     gap: 0.5rem;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
-    background: rgba(99, 102, 241, 0.9) !important;
-    backdrop-filter: blur(8px);
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
-    color: white !important;
-    font-weight: 600;
+    min-height: 40px;
 }
 
 #themeToggle {
@@ -486,6 +487,9 @@ body.dark-mode {
 
 .search-box input:focus {
     outline: none;
+    box-shadow: 0 0 0 2px var(--accent-color);
+    background: white;
+}
 
 .dark-mode .search-box input {
     background-color: var(--chat-bg-dark);
@@ -523,33 +527,55 @@ body.dark-mode {
 }
 
 .chat-header {
-    padding: 1.25rem;
-    display: flex;
+    padding: 1rem;
+    background: linear-gradient(135deg, var(--accent-color), var(--primary-color));
+    color: white;
+    display: grid;
+    grid-template-columns: auto 1fr auto; /* Changed to accommodate actions */
     align-items: center;
     gap: 1rem;
-    background-color: var(--background-light);
-    border-bottom: 1px solid #ddd;
-    box-shadow: var(--chat-shadow);
-    z-index: 2;
-    position: relative;
-    min-height: 80px;
+    position: sticky;
+    top: 0;
+    z-index: 10;
 }
 
-.dark-mode .chat-header {
-    background-color: rgba(15, 23, 42, 0.8);
-    border-color: rgba(255, 255, 255, 0.1);
+/* Add new chat header actions styles */
+.chat-header-actions {
+    display: none; /* Hidden by default */
 }
 
-.chat-header img {
-    width: 45px;
-    height: 45px;
-    border-radius: 50%;
-    object-fit: cover;
-}
+@media (max-width: 768px) {
+    /* ...existing mobile styles... */
 
-.chat-info h3 {
-    font-size: 1.1rem;
-    margin-bottom: 0.2rem;
+    .chat-header-actions {
+        display: flex;
+        gap: 0.8rem;
+        align-items: center;
+    }
+
+    .chat-header-actions .action-btn {
+        width: 36px;
+        height: 36px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: rgba(255, 255, 255, 0.2);
+        color: white;
+        border: none;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+
+    .chat-header-actions .action-btn:active {
+        transform: scale(0.95);
+        background: rgba(255, 255, 255, 0.3);
+    }
+
+    /* Hide desktop action buttons in mobile chat view */
+    .chat-area .action-buttons {
+        display: none !important;
+    }
 }
 
 #chatStatus {
@@ -632,6 +658,7 @@ body.dark-mode {
     max-width: 100%;
     word-break: break-word;
     box-shadow: var(--bubble-shadow-light);
+    transition: all 0.3s ease;
 }
 
 .message.outgoing .message-bubble {
@@ -1094,6 +1121,7 @@ body.dark-mode {
     border-radius: 12px;
     cursor: pointer;
     transition: all 0.3s ease;
+    margin: 0.5rem 1rem;
 }
 
 .dark-mode .chat-list-item {
@@ -1309,12 +1337,23 @@ body.dark-mode {
     }
 
     .action-buttons {
-        right: 0.5rem;
+        top: auto;
+        bottom: 80px;
+        right: 1rem;
+        flex-direction: column;
+        background: none;
     }
 
-    #logoutBtn {
-        padding: 0.5rem 1rem;
-        font-size: 0.9rem;
+    #logoutBtn, #themeToggle, #profileBtn {
+        width: 40px;
+        height: 40px;
+        padding: 0;
+        border-radius: 50%;
+        justify-content: center;
+    }
+
+    #logoutBtn span, #profileBtn span {
+        display: none;
     }
 
     .message-actions {
@@ -1685,7 +1724,7 @@ body.dark-mode {
         left: 50%;
         width: 0;
         height: 3px;
-        background: var(--accent-color);
+        background: var (--accent-color);
         transition: all 0.3s ease;
         transform: translateX(-50%);
     }
@@ -1950,28 +1989,6 @@ body.dark-mode {
                 color 0.3s ease,
                 border-color 0.3s ease,
                 box-shadow 0.3s ease;
-}
-
-.users-list {
-    padding: 1rem 0;
-    overflow-y: auto;
-    height: calc(100% - 60px);
-}
-
-.users-header {
-    padding: 1rem;
-    background: linear-gradient(135deg, var(--accent-color), var(--primary-color));
-    color: white;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    position: sticky;
-    top: 0;
-    z-index: 10;
-}
-
-.header-actions {
-    display: flex;
     gap: 0.8rem;
 }
 
@@ -2002,8 +2019,6 @@ body.dark-mode {
     cursor: pointer;
     transition: all 0.3s ease;
     margin: 0.5rem 1rem;
-    border-radius: 12px;
-    background: var(--chat-bg-light);
 }
 
 .dark-mode .chat-list-item {
@@ -2386,6 +2401,11 @@ body.dark-mode {
     background: linear-gradient(135deg, var(--accent-color), var(--primary-color));
     -webkit-mask: 
         linear-gradient(#fff 0 0) content-box, 
+        linear-gradient(#fff 0 0);
+    mask: 
+        linear-gradient(#fff 0 0) content-box, 
+        linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor;
     mask-composite: exclude;
     opacity: 0.5;
 }
@@ -2828,5 +2848,391 @@ video.message-media {
 
 .dark-mode .fallback-avatar {
     border-color: var(--primary-color);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+/* Mobile Chat Area Fixes */
+@media (max-width: 768px) {
+    .sidebar {
+        width: 100%;
+        position: fixed;
+        height: 100%;
+        transform: none; /* Remove the transform that was hiding it */
+        z-index: 1000;
+        background: var(--background-light);
+        display: block;
+    }
+
+    .dark-mode .sidebar {
+        background: var(--background-dark);
+    }
+
+    .chat-area {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 60px;
+        z-index: 2000;
+        background-color: var(--background-light);
+    }
+
+    .chat-area.active {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .chat-list {
+        height: calc(100vh - 180px); /* Adjust height to account for profile section and mobile nav */
+        overflow-y: auto;
+        padding-bottom: 60px; /* Space for mobile navigation */
+    }
+
+    .chat-list-item {
+        opacity: 1;
+        visibility: visible;
+        background: var(--background-light);
+        margin: 0.5rem 1rem;
+        padding: 1rem;
+        border-radius: 12px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    }
+
+    .dark-mode .chat-list-item {
+        background: var(--background-dark);
+    }
+
+    .mobile-nav {
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        background: var(--background-light);
+        border-top: 1px solid rgba(0, 0, 0, 0.1);
+        z-index: 1001; /* Ensure it's above other elements */
+    }
+
+    /* Ensure chat area is properly hidden when not active */
+    .chat-area:not(.active) {
+        display: none;
+    }
+}
+
+/* Fix mobile user list visibility */
+@media (max-width: 768px) {
+    .sidebar {
+        display: block;
+        width: 100%;
+        height: calc(100vh - 60px); /* Account for mobile nav */
+        position: relative;
+        transform: none;
+        background: var(--background-light);
+    }
+
+    .chat-list {
+        height: calc(100vh - 240px); /* Adjust for profile section and nav */
+        overflow-y: auto;
+    }
+
+    .users-page {
+        position: relative;
+        height: calc(100vh - 60px);
+        background: var(--background-light);
+        overflow-y: auto;
+        padding-bottom: 60px;
+    }
+
+    .chat-list-item {
+        display: flex;
+        opacity: 1;
+        visibility: visible;
+        transform: none;
+        margin: 0.5rem 1rem;
+        background: var(--chat-bg-light);
+    }
+
+    .mobile-nav {
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        height: 60px;
+        background: var(--background-light);
+        border-top: 1px solid rgba(0, 0, 0, 0.1);
+        backdrop-filter: blur(10px);
+        z-index: 1000;
+    }
+
+    .chat-area.active {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 60px;
+        z-index: 1001;
+    }
+}
+
+/* Dark mode adjustments */
+.dark-mode .users-page {
+    background: var(--background-dark);
+}
+
+/* Mobile Navigation and Layout Fixes */
+@media (max-width: 768px) {
+    .sidebar {
+        width: 100%;
+        position: fixed;
+        height: 100vh;
+        top: 0;
+        left: 0;
+        transform: translateX(0);
+        z-index: 1000;
+        background: var(--background-light);
+    }
+
+    .chat-area {
+        width: 100%;
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 60px;
+        z-index: 2000;
+        display: none;
+        background: var(--background-light);
+    }
+
+    .chat-area.active {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .users-page {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 60px;
+        z-index: 1500;
+        background: var(--background-light);
+        overflow-y: auto;
+        display: none;
+    }
+
+    .users-page.active {
+        display: block;
+    }
+
+    .mobile-nav {
+        display: flex;
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        height: 60px;
+        background: var(--background-light);
+        border-top: 1px solid rgba(0, 0, 0, 0.1);
+        z-index: 2100;
+    }
+
+    .nav-button {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 0.2rem;
+        color: var(--text-light);
+        text-decoration: none;
+        padding: 0.5rem;
+    }
+
+    .nav-button i {
+        font-size: 1.4rem;
+    }
+
+    .nav-button span {
+        font-size: 0.8rem;
+    }
+
+    .nav-button.active {
+        color: var(--accent-color);
+    }
+
+    .nav-button::after {
+        content: '';
+        position: absolute;
+        bottom: 0;
+        left: 50%;
+        width: 0;
+        height: 3px;
+        background: var(--accent-color);
+        transition: all 0.3s ease;
+        transform: translateX(-50%);
+    }
+
+    .nav-button.active::after {
+        width: 30px;
+    }
+
+    /* Adjust header actions for mobile */
+    .header-actions {
+        display: flex;
+        gap: 0.8rem;
+    }
+
+    .header-actions .action-btn {
+        width: 36px;
+        height: 36px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: rgba(255, 255, 255, 0.2);
+        color: white;
+        backdrop-filter: blur(5px);
+    }
+
+    .chat-list {
+        height: calc(100vh - 180px);
+        padding-bottom: 60px;
+    }
+
+    .action-buttons {
+        display: none; /* Hide desktop action buttons */
+    }
+
+    /* Back button in chat */
+    .back-btn {
+        display: flex;
+        width: 40px;
+        height: 40px;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.2rem;
+        color: white;
+        background: rgba(255, 255, 255, 0.2);
+        border-radius: 50%;
+    }
+}
+
+/* Dark mode mobile adjustments */
+.dark-mode .mobile-nav {
+    background: var(--background-dark);
+    border-top-color: rgba(255, 255, 255, 0.1);
+}
+
+.dark-mode .users-page {
+    background: var(--background-dark);
+}
+
+.dark-mode .chat-area {
+    background: var(--background-dark);
+}
+
+/* Mobile visibility fixes */
+@media (max-width: 768px) {
+    .sidebar {
+        width: 100%;
+        height: calc(100vh - 60px);
+        position: fixed;
+        top: 0;
+        left: 0;
+        transform: translateX(0); /* Remove the transform that was hiding it */
+        z-index: 1000;
+        background: var(--background-light);
+        overflow-y: auto;
+        padding-bottom: 60px; /* Space for mobile navigation */
+    }
+
+    .chat-list {
+        height: auto;
+        overflow-y: visible;
+        padding-bottom: 70px;
+        display: block !important; /* Force display */
+    }
+
+    .chat-list-item {
+        display: flex !important; /* Force display */
+        visibility: visible !important;
+        opacity: 1 !important;
+        margin: 0.5rem 1rem;
+        background: var(--chat-bg-light);
+        border-radius: 12px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    }
+
+    .users-page {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 60px;
+        background: var(--background-light);
+        z-index: 1500;
+        overflow-y: auto;
+    }
+
+    .users-page.active {
+        display: block !important;
+    }
+
+    .users-list {
+        height: calc(100vh - 180px);
+        overflow-y: auto;
+        padding-bottom: 60px;
+        display: block !important;
+    }
+
+    #usersList {
+        display: block !important;
+    }
+
+    .profile-section {
+        position: sticky;
+        top: 0;
+        z-index: 1001;
+        background: linear-gradient(135deg, var(--accent-color), var(--primary-color));
+    }
+
+    .chat-area {
+        position: fixed;
+        width: 100%;
+        height: calc(100vh - 60px);
+        top: 0;
+        left: 0;
+        display: none;
+        z-index: 2000;
+    }
+
+    .chat-area.active {
+        display: flex !important;
+    }
+
+    .mobile-nav {
+        display: flex !important;
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        height: 60px;
+        background: var(--background-light);
+        border-top: 1px solid rgba(0, 0, 0, 0.1);
+        z-index: 3000;
+    }
+}
+
+/* Dark mode adjustments for mobile */
+.dark-mode .sidebar,
+.dark-mode .users-page,
+.dark-mode .chat-area {
+    background: var(--background-dark);
+}
+
+.dark-mode .chat-list-item {
+    background: var(--chat-bg-dark);
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
 }

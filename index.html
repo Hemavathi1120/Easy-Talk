@@ -65,14 +65,12 @@
                 </div>
             </div>
 
-            <!-- Chat List Section -->
+            <!-- Chat List -->
             <div class="chat-list">
                 <div class="search-box">
                     <input type="text" id="searchInput" placeholder="Search or start new chat">
                 </div>
-                <div id="chatsList" class="chats-container">
-                    <!-- Chat items will be inserted here -->
-                </div>
+                <div id="chatsList"></div>
             </div>
         </div>
 
@@ -101,10 +99,17 @@
                     <button class="back-btn" id="backToUsers">
                         <i class="fas fa-arrow-left"></i>
                     </button>
-                    <img id="activeChatAvatar" src="./assets/default-avatar.png" alt="Chat">
                     <div class="chat-info">
                         <h3 id="activeChatName"></h3>
                         <span id="chatStatus"></span>
+                    </div>
+                    <div class="chat-header-actions">
+                        <button class="action-btn" id="themeBtnMobile">
+                            <i class="fas fa-moon"></i>
+                        </button>
+                        <button class="action-btn" id="logoutBtnMobile">
+                            <i class="fas fa-sign-out-alt"></i>
+                        </button>
                     </div>
                 </div>
 

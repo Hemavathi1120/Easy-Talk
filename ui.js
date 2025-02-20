@@ -95,8 +95,6 @@ class UISystem {
     setupMobileNavigation() {
         if (window.innerWidth > 768) return;
 
-        this.showUsersPage();
-
         const navButtons = document.querySelectorAll('.nav-button');
         navButtons.forEach(button => {
             button.addEventListener('click', (e) => {
@@ -104,11 +102,28 @@ class UISystem {
                 navButtons.forEach(btn => btn.classList.remove('active'));
                 button.classList.add('active');
 
+                const chatArea = document.querySelector('.chat-area');
+                const usersPage = document.querySelector('.users-page');
+                const sidebar = document.querySelector('.sidebar');
+
+                // Hide all first
+                if (chatArea) chatArea.style.display = 'none';
+                if (usersPage) usersPage.style.display = 'none';
+                if (sidebar) sidebar.style.display = 'none';
+
                 switch (button.id) {
                     case 'chatsTab':
+                        if (sidebar) {
+                            sidebar.style.display = 'block';
+                            if (usersPage) usersPage.classList.remove('active');
+                        }
+                        break;
+                        
                     case 'usersTab':
                         this.showUsersPage();
+                        if (sidebar) sidebar.style.display = 'none';
                         break;
+
                     case 'profileTab':
                         this.showProfileModal();
                         break;
@@ -131,22 +146,17 @@ class UISystem {
                 localStorage.setItem('theme', isDark ? 'dark' : 'light');
                 this.updateThemeColors(isDark ? 'dark' : 'light');
             });
+
+            // Sync initial state
+            if (document.body.classList.contains('dark-mode')) {
+                themeBtnMobile.innerHTML = '<i class="fas fa-sun"></i>';
+            }
         }
 
         if (logoutBtnMobile) {
             logoutBtnMobile.addEventListener('click', async () => {
-                try {
-                    const user = firebase.auth().currentUser;
-                    if (user) {
-                        await firebase.firestore().collection('users')
-                            .doc(user.uid)
-                            .update({ status: 'offline' });
-                    }
-                    await firebase.auth().signOut();
-                    window.location.reload();
-                } catch (error) {
-                    console.error('Logout error:', error);
-                    showAlert('Error logging out', 'error');
+                if (window.authSystem) {
+                    await window.authSystem.handleLogout();
                 }
             });
         }
@@ -154,15 +164,27 @@ class UISystem {
 
     showUsersPage() {
         const existingUsersPage = document.querySelector('.users-page');
+        const chatArea = document.querySelector('.chat-area');
+        const sidebar = document.querySelector('.sidebar');
+
         if (existingUsersPage) {
             existingUsersPage.remove();
         }
 
+        if (chatArea) {
+            chatArea.style.display = 'none';
+        }
+
+        if (sidebar) {
+            sidebar.style.display = 'none';
+        }
+
         const usersPage = document.createElement('div');
-        usersPage.className = 'users-page';
+        usersPage.className = 'users-page active'; // Add 'active' class
+        usersPage.style.display = 'block'; // Ensure it's visible
         usersPage.innerHTML = `
             <div class="users-header">
-                <h2>WhatsApp</h2>
+                <h2>Users</h2>
                 <div class="header-actions">
                     <button id="themeBtnMobile" class="action-btn">
                         <i class="fas fa-moon"></i>
@@ -173,28 +195,18 @@ class UISystem {
                 </div>
             </div>
             <div class="search-box">
-                <input type="text" placeholder="Search or start new chat" id="searchUsers">
+                <input type="text" placeholder="Search users" id="searchUsers">
             </div>
-            <div class="chat-sections">
-                <div id="usersList" class="users-list"></div>
-            </div>
+            <div class="users-list" id="usersList"></div>
         `;
 
         document.querySelector('#appContainer').appendChild(usersPage);
-
-        // Setup search functionality
+        
         const searchInput = usersPage.querySelector('#searchUsers');
         searchInput.addEventListener('input', (e) => this.filterUsers(e.target.value));
 
         this.setupMobileButtons();
         
-        // Hide chat area
-        const chatArea = document.querySelector('.chat-area');
-        if (chatArea) {
-            chatArea.style.display = 'none';
-        }
-
-        // Load users
         if (window.chatSystem) {
             window.chatSystem.loadUsers();
         }
@@ -388,37 +400,37 @@ class UISystem {
         if (actionButtons && window.innerWidth > 768) {
             actionButtons.style.display = 'flex';
         }
+
+        // Setup mobile buttons for chat header
+        this.setupMobileButtons();
     }
 
     goBackToUsers() {
         const chatArea = document.querySelector('.chat-area');
         const usersPage = document.querySelector('.users-page');
+        const sidebar = document.querySelector('.sidebar');
 
-        // Add slide-out animation
+        // Animate chat area out
         if (chatArea) {
             chatArea.style.transition = 'transform 0.3s ease-out';
             chatArea.style.transform = 'translateX(100%)';
             setTimeout(() => {
                 chatArea.style.display = 'none';
                 chatArea.style.transform = '';
-                chatArea.classList.remove('active');
             }, 300);
         }
 
-        // Show users page with animation
-        if (usersPage) {
-            usersPage.style.display = 'block';
-            usersPage.style.transform = 'translateX(-100%)';
-            setTimeout(() => {
-                usersPage.style.transform = '';
-                // Refresh the users list
-                if (window.chatSystem) {
-                    window.chatSystem.loadUsers();
-                }
-            }, 50);
+        // Show appropriate screen based on active tab
+        const activeTab = document.querySelector('.nav-button.active');
+        if (activeTab) {
+            if (activeTab.id === 'chatsTab') {
+                if (sidebar) sidebar.style.display = 'block';
+            } else if (activeTab.id === 'usersTab') {
+                if (usersPage) usersPage.style.display = 'block';
+            }
         }
 
-        // Clear the active chat area
+        // Clear messages
         const messagesContainer = document.getElementById('messagesContainer');
         if (messagesContainer) {
             messagesContainer.innerHTML = '';
