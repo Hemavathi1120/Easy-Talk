@@ -104,6 +104,9 @@
                         <span id="chatStatus"></span>
                     </div>
                     <div class="chat-header-actions">
+                        <button class="action-btn" id="settingsBtnMobile">
+                            <i class="fas fa-cog"></i>
+                        </button>
                         <button class="action-btn" id="themeBtnMobile">
                             <i class="fas fa-moon"></i>
                         </button>
@@ -145,6 +148,104 @@
             <i class="fas fa-user"></i>
             <span>Profile</span>
         </a>
+    </div>
+
+    <!-- Add Settings Menu before closing body tag -->
+    <div class="settings-menu" id="settingsMenu">
+        <div class="settings-header">
+            <h2>Settings</h2>
+            <button class="close-btn" id="closeSettings">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <div class="settings-content">
+            <div class="settings-section">
+                <h3>Appearance</h3>
+                <div class="settings-option">
+                    <i class="fas fa-moon"></i>
+                    <span>Dark Mode</span>
+                    <label class="switch">
+                        <input type="checkbox" id="darkModeToggle">
+                        <span class="slider"></span>
+                    </label>
+                </div>
+                <div class="settings-option">
+                    <i class="fas fa-text-height"></i>
+                    <span>Font Size</span>
+                    <select id="fontSizeSelect">
+                        <option value="small">Small</option>
+                        <option value="medium" selected>Medium</option>
+                        <option value="large">Large</option>
+                    </select>
+                </div>
+            </div>
+            
+            <div class="settings-section">
+                <h3>Notifications</h3>
+                <div class="settings-option">
+                    <i class="fas fa-bell"></i>
+                    <span>Message Notifications</span>
+                    <label class="switch">
+                        <input type="checkbox" id="notificationToggle" checked>
+                        <span class="slider"></span>
+                    </label>
+                </div>
+            </div>
+
+            <div class="settings-section danger-zone">
+                <h3>Account</h3>
+                <div class="settings-option">
+                    <i class="fas fa-trash"></i>
+                    <span class="text-danger">Delete Account</span>
+                    <i class="fas fa-chevron-right"></i>
+                </div>
+            </div>
+
+            <!-- Help & Support Section -->
+            <div class="settings-section">
+                <h3>Help & Support</h3>
+                <div class="settings-option" id="helpCenter">
+                    <i class="fas fa-question-circle"></i>
+                    <span>Help Center</span>
+                    <i class="fas fa-chevron-right"></i>
+                </div>
+                <div class="settings-option" id="contactSupport">
+                    <i class="fas fa-headset"></i>
+                    <span>Contact Support</span>
+                    <i class="fas fa-chevron-right"></i>
+                </div>
+                <div class="settings-option" id="reportBug">
+                    <i class="fas fa-bug"></i>
+                    <span>Report a Bug</span>
+                    <i class="fas fa-chevron-right"></i>
+                </div>
+                <div class="settings-option" id="sendFeedback">
+                    <i class="fas fa-comment-alt"></i>
+                    <span>Send Feedback</span>
+                    <i class="fas fa-chevron-right"></i>
+                </div>
+            </div>
+
+            <!-- About Section -->
+            <div class="settings-section">
+                <h3>About</h3>
+                <div class="settings-option" id="aboutUs">
+                    <i class="fas fa-info-circle"></i>
+                    <span>About Easy Talk</span>
+                    <i class="fas fa-chevron-right"></i>
+                </div>
+                <div class="settings-option" id="privacyPolicy">
+                    <i class="fas fa-shield-alt"></i>
+                    <span>Privacy Policy</span>
+                    <i class="fas fa-chevron-right"></i>
+                </div>
+                <div class="settings-option" id="termsOfService">
+                    <i class="fas fa-file-contract"></i>
+                    <span>Terms of Service</span>
+                    <i class="fas fa-chevron-right"></i>
+                </div>
+            </div>
+        </div>
     </div>
 
     <!-- Firebase SDK -->

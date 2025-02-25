@@ -4,6 +4,9 @@ class UISystem {
         this.setupMobileNavigation();
         this.setupBackButton();
         this.setupProfileButton();  // Add this line
+        this.setupMobileButtons();
+        this.setupSettings();
+        this.currentView = 'chats'; // Add this line
     }
 
     init() {
@@ -96,36 +99,43 @@ class UISystem {
         if (window.innerWidth > 768) return;
 
         const navButtons = document.querySelectorAll('.nav-button');
+        const sidebar = document.querySelector('.sidebar');
+        const chatArea = document.querySelector('.chat-area');
+        const usersPage = document.querySelector('.users-page');
+
         navButtons.forEach(button => {
             button.addEventListener('click', (e) => {
                 e.preventDefault();
+                const view = button.id.replace('Tab', '');
+                
+                // Remove active class from all buttons
                 navButtons.forEach(btn => btn.classList.remove('active'));
                 button.classList.add('active');
 
-                const chatArea = document.querySelector('.chat-area');
-                const usersPage = document.querySelector('.users-page');
-                const sidebar = document.querySelector('.sidebar');
+                this.currentView = view;
 
-                // Hide all first
+                // Hide all views first
+                if (sidebar) sidebar.style.display = 'none';
                 if (chatArea) chatArea.style.display = 'none';
                 if (usersPage) usersPage.style.display = 'none';
-                if (sidebar) sidebar.style.display = 'none';
 
-                switch (button.id) {
-                    case 'chatsTab':
+                // Handle view switching
+                switch (view) {
+                    case 'chats':
                         if (sidebar) {
-                            sidebar.style.display = 'block';
-                            if (usersPage) usersPage.classList.remove('active');
+                            sidebar.style.display = 'flex';
+                            this.loadRecentChats();
                         }
                         break;
-                        
-                    case 'usersTab':
+                    case 'users':
                         this.showUsersPage();
-                        if (sidebar) sidebar.style.display = 'none';
                         break;
-
-                    case 'profileTab':
+                    case 'profile':
                         this.showProfileModal();
+                        // Keep current view visible behind the profile modal
+                        if (this.currentView === 'chats') {
+                            sidebar.style.display = 'flex';
+                        }
                         break;
                 }
             });
@@ -140,9 +150,7 @@ class UISystem {
             themeBtnMobile.addEventListener('click', () => {
                 document.body.classList.toggle('dark-mode');
                 const isDark = document.body.classList.contains('dark-mode');
-                themeBtnMobile.innerHTML = isDark ? 
-                    '<i class="fas fa-sun"></i>' : 
-                    '<i class="fas fa-moon"></i>';
+                themeBtnMobile.innerHTML = `<i class="fas fa-${isDark ? 'sun' : 'moon'}"></i>`;
                 localStorage.setItem('theme', isDark ? 'dark' : 'light');
                 this.updateThemeColors(isDark ? 'dark' : 'light');
             });
@@ -167,21 +175,18 @@ class UISystem {
         const chatArea = document.querySelector('.chat-area');
         const sidebar = document.querySelector('.sidebar');
 
+        // Remove existing users page if it exists
         if (existingUsersPage) {
             existingUsersPage.remove();
         }
 
-        if (chatArea) {
-            chatArea.style.display = 'none';
-        }
+        // Hide other views
+        if (chatArea) chatArea.style.display = 'none';
+        if (sidebar) sidebar.style.display = 'none';
 
-        if (sidebar) {
-            sidebar.style.display = 'none';
-        }
-
+        // Create new users page
         const usersPage = document.createElement('div');
-        usersPage.className = 'users-page active'; // Add 'active' class
-        usersPage.style.display = 'block'; // Ensure it's visible
+        usersPage.className = 'users-page';
         usersPage.innerHTML = `
             <div class="users-header">
                 <h2>Users</h2>
@@ -202,14 +207,20 @@ class UISystem {
 
         document.querySelector('#appContainer').appendChild(usersPage);
         
+        // Setup search functionality
         const searchInput = usersPage.querySelector('#searchUsers');
         searchInput.addEventListener('input', (e) => this.filterUsers(e.target.value));
 
+        // Setup mobile buttons
         this.setupMobileButtons();
         
+        // Load users
         if (window.chatSystem) {
             window.chatSystem.loadUsers();
         }
+
+        // Ensure the users page is visible
+        usersPage.style.display = 'flex';
     }
 
     filterUsers(searchTerm) {
@@ -273,36 +284,53 @@ class UISystem {
 
         try {
             const currentUser = firebase.auth().currentUser;
-            
-            // Create a real-time listener for users
-            const unsubscribe = firebase.firestore()
+            if (!currentUser) return;
+
+            // Clear existing list
+            usersList.innerHTML = '';
+
+            // Create real-time listener for users
+            this.unsubscribeUsers = firebase.firestore()
                 .collection('users')
                 .onSnapshot((snapshot) => {
-                    usersList.innerHTML = ''; // Clear existing list
-                    
-                    snapshot.forEach(doc => {
-                        const userData = doc.data();
-                        // Don't show current user
-                        if (doc.id !== currentUser.uid) {
-                            const userItem = this.createUserListItem(doc.id, userData);
-                            usersList.appendChild(userItem);
+                    snapshot.docChanges().forEach(change => {
+                        const userData = {
+                            id: change.doc.id,
+                            ...change.doc.data()
+                        };
+
+                        if (userData.id !== currentUser.uid) {
+                            const existingItem = usersList.querySelector(`[data-user-id="${userData.id}"]`);
+                            
+                            if (change.type === 'added' && !existingItem) {
+                                const userItem = this.createUserListItem(userData.id, userData);
+                                usersList.appendChild(userItem);
+                            } else if (change.type === 'modified' && existingItem) {
+                                const newItem = this.createUserListItem(userData.id, userData);
+                                existingItem.replaceWith(newItem);
+                            } else if (change.type === 'removed' && existingItem) {
+                                existingItem.remove();
+                            }
                         }
                     });
                 });
 
-            // Store unsubscribe function for cleanup
-            this.unsubscribeUsers = unsubscribe;
         } catch (error) {
             console.error("Error loading users:", error);
-            showAlert('Error loading users', 'error');
+            window.showAlert('Error loading users', 'error');
         }
     }
 
     createUserListItem(userId, userData) {
         const div = document.createElement('div');
         div.className = 'chat-list-item';
+        div.dataset.userId = userId;
+        
+        const avatarUrl = userData.photoURL || './assets/default-avatar.png';
+        
         div.innerHTML = `
-            <img src="${userData.photoURL || 'default-avatar.png'}" alt="Avatar">
+            <img src="${avatarUrl}" alt="${userData.username || 'User'}" 
+                 onerror="this.src='./assets/default-avatar.png'">
             <div class="chat-info">
                 <h4>${userData.username || 'Anonymous'}</h4>
                 <p>
@@ -355,85 +383,64 @@ class UISystem {
     }
 
     showChatArea(animate = false) {
-        const usersPage = document.querySelector('.users-page');
         const chatArea = document.querySelector('.chat-area');
         const sidebar = document.querySelector('.sidebar');
+        const usersPage = document.querySelector('.users-page');
         
         if (window.innerWidth <= 768) {
+            // Hide other views
             if (sidebar) {
-                sidebar.classList.remove('active');
+                sidebar.style.display = 'none';
+            }
+            if (usersPage) {
+                usersPage.style.display = 'none';
             }
             
-            if (usersPage) {
+            // Show chat area
+            if (chatArea) {
+                chatArea.style.display = 'flex';
+                chatArea.classList.add('active');
                 if (animate) {
-                    usersPage.style.transition = 'transform 0.3s ease-out';
-                    usersPage.style.transform = 'translateX(-100%)';
-                    setTimeout(() => {
-                        usersPage.style.display = 'none';
-                        usersPage.style.transform = '';
-                    }, 300);
-                } else {
-                    usersPage.style.display = 'none';
+                    chatArea.style.transform = 'translateX(0)';
                 }
             }
-        }
 
-        if (chatArea) {
-            chatArea.style.display = 'flex';
-            if (animate) {
-                chatArea.style.transition = 'transform 0.3s ease-out';
-                chatArea.style.transform = 'translateX(100%)';
-                setTimeout(() => {
-                    chatArea.style.transform = '';
-                }, 50);
-            }
+            // Update mobile navigation
+            const navButtons = document.querySelectorAll('.nav-button');
+            navButtons.forEach(btn => btn.classList.remove('active'));
         }
-
-        // Ensure message container is visible
-        const messagesContainer = document.getElementById('messagesContainer');
-        if (messagesContainer) {
-            messagesContainer.style.display = 'flex';
-        }
-
-        // Show action buttons on desktop
-        const actionButtons = document.querySelector('.action-buttons');
-        if (actionButtons && window.innerWidth > 768) {
-            actionButtons.style.display = 'flex';
-        }
-
-        // Setup mobile buttons for chat header
-        this.setupMobileButtons();
     }
 
     goBackToUsers() {
         const chatArea = document.querySelector('.chat-area');
-        const usersPage = document.querySelector('.users-page');
         const sidebar = document.querySelector('.sidebar');
+        const usersPage = document.querySelector('.users-page');
 
-        // Animate chat area out
-        if (chatArea) {
-            chatArea.style.transition = 'transform 0.3s ease-out';
-            chatArea.style.transform = 'translateX(100%)';
-            setTimeout(() => {
+        if (window.innerWidth <= 768) {
+            // Hide chat area
+            if (chatArea) {
+                chatArea.classList.remove('active');
                 chatArea.style.display = 'none';
-                chatArea.style.transform = '';
-            }, 300);
-        }
-
-        // Show appropriate screen based on active tab
-        const activeTab = document.querySelector('.nav-button.active');
-        if (activeTab) {
-            if (activeTab.id === 'chatsTab') {
-                if (sidebar) sidebar.style.display = 'block';
-            } else if (activeTab.id === 'usersTab') {
-                if (usersPage) usersPage.style.display = 'block';
             }
-        }
-
-        // Clear messages
-        const messagesContainer = document.getElementById('messagesContainer');
-        if (messagesContainer) {
-            messagesContainer.innerHTML = '';
+            
+            // Show appropriate view based on current tab
+            const activeTab = document.querySelector('.nav-button.active');
+            if (activeTab) {
+                if (activeTab.id === 'chatsTab') {
+                    if (sidebar) {
+                        sidebar.style.display = 'block';
+                    }
+                } else if (activeTab.id === 'usersTab') {
+                    if (usersPage) {
+                        usersPage.style.display = 'block';
+                    }
+                }
+            } else {
+                // Default to showing sidebar
+                if (sidebar) {
+                    sidebar.style.display = 'block';
+                }
+            }
         }
     }
 
@@ -717,6 +724,227 @@ class UISystem {
                 this.showProfileModal();
             });
         }
+    }
+
+    setupSettings() {
+        // Get all settings related elements
+        const settingsMenu = document.getElementById('settingsMenu');
+        const settingsBtn = document.getElementById('settingsBtn');
+        const settingsBtnMobile = document.getElementById('settingsBtnMobile');
+        const closeSettings = document.getElementById('closeSettings');
+        const darkModeToggle = document.getElementById('darkModeToggle');
+        const fontSizeSelect = document.getElementById('fontSizeSelect');
+        const notificationToggle = document.getElementById('notificationToggle');
+
+        // Settings button click handlers
+        const openSettings = () => {
+            settingsMenu.classList.add('active');
+        };
+
+        const closeSettingsMenu = () => {
+            settingsMenu.classList.remove('active');
+        };
+
+        // Add click listeners to settings buttons
+        if (settingsBtn) {
+            settingsBtn.addEventListener('click', openSettings);
+        }
+        if (settingsBtnMobile) {
+            settingsBtnMobile.addEventListener('click', openSettings);
+        }
+        if (closeSettings) {
+            closeSettings.addEventListener('click', closeSettingsMenu);
+        }
+
+        // Close on outside click
+        settingsMenu.addEventListener('click', (e) => {
+            if (e.target === settingsMenu) {
+                closeSettingsMenu();
+            }
+        });
+
+        // Initialize dark mode toggle state
+        if (darkModeToggle) {
+            darkModeToggle.checked = document.body.classList.contains('dark-mode');
+            darkModeToggle.addEventListener('change', (e) => {
+                document.body.classList.toggle('dark-mode', e.target.checked);
+                localStorage.setItem('theme', e.target.checked ? 'dark' : 'light');
+                this.updateThemeColors(e.target.checked ? 'dark' : 'light');
+            });
+        }
+
+        // Initialize font size from localStorage
+        if (fontSizeSelect) {
+            const savedFontSize = localStorage.getItem('fontSize') || 'medium';
+            fontSizeSelect.value = savedFontSize;
+            document.body.style.fontSize = {
+                small: '14px',
+                medium: '16px',
+                large: '18px'
+            }[savedFontSize];
+
+            fontSizeSelect.addEventListener('change', (e) => {
+                const size = e.target.value;
+                document.body.style.fontSize = {
+                    small: '14px',
+                    medium: '16px',
+                    large: '18px'
+                }[size];
+                localStorage.setItem('fontSize', size);
+            });
+        }
+
+        // Initialize notification toggle
+        if (notificationToggle) {
+            const notificationsEnabled = localStorage.getItem('notifications') === 'true';
+            notificationToggle.checked = notificationsEnabled;
+            
+            notificationToggle.addEventListener('change', (e) => {
+                if (e.target.checked) {
+                    this.requestNotificationPermission();
+                }
+                localStorage.setItem('notifications', e.target.checked);
+            });
+        }
+
+        // Help & Support handlers
+        document.getElementById('helpCenter').addEventListener('click', () => {
+            window.open('https://help.easytalk.com', '_blank');
+        });
+
+        document.getElementById('contactSupport').addEventListener('click', () => {
+            window.location.href = 'mailto:support@easytalk.com';
+        });
+
+        document.getElementById('reportBug').addEventListener('click', () => {
+            this.showBugReportForm();
+        });
+
+        document.getElementById('sendFeedback').addEventListener('click', () => {
+            this.showFeedbackForm();
+        });
+
+        // About section handlers
+        document.getElementById('aboutUs').addEventListener('click', () => {
+            this.showAboutModal();
+        });
+
+        document.getElementById('privacyPolicy').addEventListener('click', () => {
+            window.open('https://easytalk.com/privacy', '_blank');
+        });
+
+        document.getElementById('termsOfService').addEventListener('click', () => {
+            window.open('https://easytalk.com/terms', '_blank');
+        });
+    }
+
+    async requestNotificationPermission() {
+        try {
+            const permission = await Notification.requestPermission();
+            if (permission === 'granted') {
+                window.showAlert('Notifications enabled!', 'success');
+            } else {
+                window.showAlert('Notification permission denied', 'error');
+            }
+        } catch (error) {
+            console.error('Error requesting notification permission:', error);
+            window.showAlert('Error enabling notifications', 'error');
+        }
+    }
+
+    showBugReportForm() {
+        const modal = document.createElement('div');
+        modal.className = 'modal';
+        modal.innerHTML = `
+            <div class="modal-content">
+                <h2>Report a Bug</h2>
+                <form id="bugReportForm">
+                    <textarea placeholder="Describe the issue you're experiencing..." required></textarea>
+                    <div class="modal-actions">
+                        <button type="button" class="cancel-btn">Cancel</button>
+                        <button type="submit" class="submit-btn">Submit Report</button>
+                    </div>
+                </form>
+            </div>
+        `;
+
+        document.body.appendChild(modal);
+        
+        // Handle form submission
+        const form = modal.querySelector('form');
+        form.addEventListener('submit', (e) => {
+            e.preventDefault();
+            // Here you would normally send the bug report to your backend
+            window.showAlert('Bug report submitted successfully!', 'success');
+            modal.remove();
+        });
+
+        // Handle cancel
+        modal.querySelector('.cancel-btn').addEventListener('click', () => {
+            modal.remove();
+        });
+    }
+
+    showFeedbackForm() {
+        const modal = document.createElement('div');
+        modal.className = 'modal';
+        modal.innerHTML = `
+            <div class="modal-content">
+                <h2>Send Feedback</h2>
+                <form id="feedbackForm">
+                    <textarea placeholder="Share your thoughts with us..." required></textarea>
+                    <div class="modal-actions">
+                        <button type="button" class="cancel-btn">Cancel</button>
+                        <button type="submit" class="submit-btn">Send Feedback</button>
+                    </div>
+                </form>
+            </div>
+        `;
+
+        document.body.appendChild(modal);
+        
+        // Handle form submission
+        const form = modal.querySelector('form');
+        form.addEventListener('submit', (e) => {
+            e.preventDefault();
+            // Here you would normally send the feedback to your backend
+            window.showAlert('Feedback submitted successfully!', 'success');
+            modal.remove();
+        });
+
+        // Handle cancel
+        modal.querySelector('.cancel-btn').addEventListener('click', () => {
+            modal.remove();
+        });
+    }
+
+    showAboutModal() {
+        const modal = document.createElement('div');
+        modal.className = 'modal';
+        modal.innerHTML = `
+            <div class="modal-content about-content">
+                <h2>About Easy Talk</h2>
+                <div class="app-info">
+                    <img src="./assets/logo.png" alt="Easy Talk Logo" class="app-logo">
+                    <p class="version">Version 1.0.0</p>
+                </div>
+                <p class="description">
+                    Easy Talk is a modern chat application designed to make communication simple and efficient.
+                    Built with love and cutting-edge technology to provide the best chat experience.
+                </p>
+                <div class="credits">
+                    <p>© 2024 Easy Talk. All rights reserved.</p>
+                </div>
+                <button class="close-btn">Close</button>
+            </div>
+        `;
+
+        document.body.appendChild(modal);
+        
+        // Handle close
+        modal.querySelector('.close-btn').addEventListener('click', () => {
+            modal.remove();
+        });
     }
 }
 
