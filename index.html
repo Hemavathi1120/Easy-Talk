@@ -8,6 +8,9 @@
     <link rel="stylesheet" href="styles.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <script src="https://upload-widget.cloudinary.com/global/all.js" type="text/javascript"></script>
+    <meta name="theme-color" content="#6366f1">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 </head>
 
 <body>
@@ -41,12 +44,51 @@
 
     <!-- Main App Container -->
     <div id="appContainer" class="container hidden">
+        <!-- Mobile Header -->
+        <div class="mobile-header">
+            <div class="header-content">
+                <h1>Easy Talk</h1>
+                <button class="mobile-menu-btn">
+                    <i class="fas fa-bars"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- Mobile Navigation Drawer -->
+        <div class="mobile-drawer">
+            <div class="drawer-header">
+                <img id="drawerUserAvatar" src="./default-avatar.jpg" alt="Profile">
+                <div class="drawer-user-info">
+                    <span id="drawerUserName">Anonymous</span>
+                    <span class="drawer-user-status">Online</span>
+                </div>
+            </div>
+            <nav class="drawer-nav">
+                <a href="#" class="drawer-item active" data-view="chats">
+                    <i class="fas fa-comments"></i>
+                    <span>Chats</span>
+                </a>
+                <a href="#" class="drawer-item" data-view="contacts">
+                    <i class="fas fa-users"></i>
+                    <span>Contacts</span>
+                </a>
+                <a href="#" class="drawer-item" data-view="profile">
+                    <i class="fas fa-user"></i>
+                    <span>Profile</span>
+                </a>
+                <a href="#" class="drawer-item" data-view="settings">
+                    <i class="fas fa-cog"></i>
+                    <span>Settings</span>
+                </a>
+            </nav>
+        </div>
+
         <!-- Sidebar -->
         <div class="sidebar">
             <!-- Updated Profile Section -->
             <div class="profile-section">
                 <div class="profile-info">
-                    <img id="userAvatar" src="./assets/default-avatar.png" alt="Profile" class="user-avatar">
+                    <img id="userAvatar" src="./WhatsApp Image 2025-03-01 at 10.49.06_8cf7138b.jpg" alt="Profile" class="user-avatar">
                     <div class="profile-info-text">
                         <span id="userName">Anonymous</span>
                         <span class="user-status">
@@ -110,7 +152,7 @@
                         <button class="action-btn" id="themeBtnMobile">
                             <i class="fas fa-moon"></i>
                         </button>
-                        <button class="action-btn" id="logoutBtnMobile">
+                        <button class="action-btn logout-btn" id="logoutBtnMobile">
                             <i class="fas fa-sign-out-alt"></i>
                         </button>
                     </div>
@@ -132,22 +174,38 @@
                 </div>
             </div>
         </div>
-    </div>
 
-    <!-- Add before closing body tag -->
-    <div class="mobile-nav">
-        <a href="#" class="nav-button active" id="chatsTab">
-            <i class="fas fa-comments"></i>
-            <span>Chats</span>
-        </a>
-        <a href="#" class="nav-button" id="usersTab">
-            <i class="fas fa-users"></i>
-            <span>Users</span>
-        </a>
-        <a href="#" class="nav-button" id="profileTab">
-            <i class="fas fa-user"></i>
-            <span>Profile</span>
-        </a>
+        <!-- Updated Mobile Navigation -->
+        <div class="mobile-nav">
+            <a href="#" class="nav-button active" data-view="chats">
+                <i class="fas fa-comments"></i>
+            </a>
+            <a href="#" class="nav-button" data-view="contacts">
+                <i class="fas fa-users"></i>
+            </a>
+            <a href="#" class="nav-button" data-view="search">
+                <i class="fas fa-search"></i>
+            </a>
+            <a href="#" class="nav-button" data-view="profile">
+                <i class="fas fa-user"></i>
+            </a>
+        </div>
+
+        <!-- Update Mobile Navigation -->
+        <nav class="mobile-nav">
+            <a href="#" class="nav-button" id="chatsTab" aria-label="Chats">
+                <i class="fas fa-comments"></i>
+                <span>Chats</span>
+            </a>
+            <a href="#" class="nav-button" id="usersTab" aria-label="Users">
+                <i class="fas fa-users"></i>
+                <span>Users</span>
+            </a>
+            <a href="#" class="nav-button" id="profileTab" aria-label="Profile">
+                <i class="fas fa-user"></i>
+                <span>Profile</span>
+            </a>
+        </nav>
     </div>
 
     <!-- Add Settings Menu before closing body tag -->

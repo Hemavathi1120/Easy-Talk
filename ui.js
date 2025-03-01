@@ -7,6 +7,7 @@ class UISystem {
         this.setupMobileButtons();
         this.setupSettings();
         this.currentView = 'chats'; // Add this line
+        this.setupMobileLogout(); // Add this line
     }
 
     init() {
@@ -103,43 +104,90 @@ class UISystem {
         const chatArea = document.querySelector('.chat-area');
         const usersPage = document.querySelector('.users-page');
 
+        // Add touch feedback
+        const addTouchFeedback = (element) => {
+            element.addEventListener('touchstart', () => {
+                element.style.transform = 'scale(0.97)';
+            }, { passive: true });
+
+            element.addEventListener('touchend', () => {
+                element.style.transform = '';
+            }, { passive: true });
+        };
+
         navButtons.forEach(button => {
+            addTouchFeedback(button);
+            
             button.addEventListener('click', (e) => {
                 e.preventDefault();
                 const view = button.id.replace('Tab', '');
                 
-                // Remove active class from all buttons
+                // Visual feedback
                 navButtons.forEach(btn => btn.classList.remove('active'));
                 button.classList.add('active');
 
-                this.currentView = view;
+                // Add transition class
+                button.classList.add('nav-button-pressed');
+                setTimeout(() => button.classList.remove('nav-button-pressed'), 200);
 
-                // Hide all views first
-                if (sidebar) sidebar.style.display = 'none';
-                if (chatArea) chatArea.style.display = 'none';
-                if (usersPage) usersPage.style.display = 'none';
-
-                // Handle view switching
-                switch (view) {
-                    case 'chats':
-                        if (sidebar) {
-                            sidebar.style.display = 'flex';
-                            this.loadRecentChats();
-                        }
-                        break;
-                    case 'users':
-                        this.showUsersPage();
-                        break;
-                    case 'profile':
-                        this.showProfileModal();
-                        // Keep current view visible behind the profile modal
-                        if (this.currentView === 'chats') {
-                            sidebar.style.display = 'flex';
-                        }
-                        break;
-                }
+                this.switchView(view);
             });
         });
+
+        // Add swipe gestures
+        let touchStartX = 0;
+        let touchEndX = 0;
+
+        document.addEventListener('touchstart', (e) => {
+            touchStartX = e.changedTouches[0].screenX;
+        }, { passive: true });
+
+        document.addEventListener('touchend', (e) => {
+            touchEndX = e.changedTouches[0].screenX;
+            handleSwipeGesture();
+        }, { passive: true });
+
+        const handleSwipeGesture = () => {
+            const swipeThreshold = 100;
+            const swipeDistance = touchEndX - touchStartX;
+
+            if (Math.abs(swipeDistance) > swipeThreshold) {
+                if (swipeDistance > 0 && chatArea.classList.contains('active')) {
+                    // Swipe right to go back
+                    this.goBackToUsers();
+                }
+            }
+        };
+    }
+
+    switchView(view) {
+        const sidebar = document.querySelector('.sidebar');
+        const chatArea = document.querySelector('.chat-area');
+        const usersPage = document.querySelector('.users-page');
+
+        // Hide all views first
+        [sidebar, chatArea, usersPage].forEach(el => {
+            if (el) el.style.display = 'none';
+        });
+
+        // Show selected view
+        switch (view) {
+            case 'chats':
+                sidebar.style.display = 'flex';
+                this.loadRecentChats();
+                break;
+            case 'users':
+                this.showUsersPage();
+                break;
+            case 'profile':
+                this.showProfileModal();
+                if (this.currentView === 'chats') {
+                    sidebar.style.display = 'flex';
+                }
+                break;
+        }
+
+        this.currentView = view;
     }
 
     setupMobileButtons() {
@@ -945,6 +993,38 @@ class UISystem {
         modal.querySelector('.close-btn').addEventListener('click', () => {
             modal.remove();
         });
+    }
+
+    // Add this new method
+    setupMobileLogout() {
+        const logoutBtnMobile = document.getElementById('logoutBtnMobile');
+        if (logoutBtnMobile) {
+            logoutBtnMobile.addEventListener('click', async () => {
+                if (confirm('Are you sure you want to log out?')) {
+                    try {
+                        await firebase.auth().signOut();
+                        // Clear local storage
+                        localStorage.removeItem('theme');
+                        localStorage.removeItem('fontSize');
+                        // Redirect to login page or show auth container
+                        const authContainer = document.getElementById('authContainer');
+                        const appContainer = document.getElementById('appContainer');
+                        if (authContainer && appContainer) {
+                            appContainer.classList.add('hidden');
+                            authContainer.classList.remove('hidden');
+                        }
+                        // Clean up any active listeners or states
+                        if (window.chatSystem) {
+                            window.chatSystem.cleanup();
+                        }
+                        this.cleanup();
+                    } catch (error) {
+                        console.error('Logout error:', error);
+                        window.showAlert('Failed to log out. Please try again.', 'error');
+                    }
+                }
+            });
+        }
     }
 }
 

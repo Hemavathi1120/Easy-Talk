@@ -812,7 +812,7 @@ body.dark-mode {
     background: var(--accent-color);
     color: white;
     transform: scale(1.1);
-    background: var(--accent-color);
+    background: var (--accent-color);
 }
 
 .copy-btn {
@@ -1596,17 +1596,6 @@ body.dark-mode {
     }
     
     .dark-mode .message-input {
-        background-color: rgba(15, 23, 42, 0.98);
-        border-top: 1px solid rgba(255, 255, 255, 0.1);
-    }
-    
-    .message-input input {
-        padding: 0.6rem 1rem;
-        font-size: 0.9rem;
-        background-color: var(--chat-bg-light);
-    }
-    
-    .dark-mode .message-input input {
         background-color: var(--chat-bg-dark);
         border: 1px solid rgba(255, 255, 255, 0.1);
     }
@@ -3575,6 +3564,8 @@ video.message-media {
     }
 
     .users-page {
+        width: 100%;
+        height: calc(100vh - 60px);
         position: fixed;
         top: 0;
         left: 0;
@@ -3582,8 +3573,8 @@ video.message-media {
         bottom: 60px;
         z-index: 1500;
         background: var(--background-light);
-        overflow-y: auto;
         display: none;
+        overflow-y: auto;
     }
 
     .users-page.active {
@@ -4916,3 +4907,183 @@ input:checked + .slider:before {
 }
 
 /* ...existing code... */
+
+/* Mobile Navigation */
+.mobile-nav {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 60px;
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(10px);
+    border-top: 1px solid rgba(0, 0, 0, 0.1);
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    z-index: 3000;
+    padding: 0;
+    box-shadow: 0 -1px 8px rgba(0, 0, 0, 0.1);
+}
+
+.dark-mode .mobile-nav {
+    background: rgba(15, 23, 42, 0.95);
+    border-top-color: rgba(255, 255, 255, 0.1);
+}
+
+.nav-button {
+    flex: 1;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    color: var(--text-light);
+    text-decoration: none;
+    position: relative;
+    transition: all 0.3s ease;
+    padding: 8px 0;
+    -webkit-tap-highlight-color: transparent;
+}
+
+.nav-button i {
+    font-size: 20px;
+    transition: transform 0.2s ease;
+}
+
+.nav-button span {
+    font-size: 12px;
+    font-weight: 500;
+}
+
+.nav-button.active {
+    color: var(--accent-color);
+}
+
+.nav-button.active i {
+    transform: translateY(-2px);
+}
+
+.nav-button::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 50%;
+    width: 0;
+    height: 3px;
+    background: var(--accent-color);
+    transition: all 0.3s ease;
+    transform: translateX(-50%);
+    border-radius: 0 0 3px 3px;
+}
+
+.nav-button.active::after {
+    width: 32px;
+}
+
+/* Chat Area */
+.chat-area {
+    padding-bottom: 120px !important;
+}
+
+.chat-header {
+    height: 60px;
+    padding: 0 16px;
+    gap: 12px;
+}
+
+.message-input {
+    bottom: 60px;
+    padding: 8px 12px;
+    gap: 8px;
+    height: 60px;
+}
+
+.message-input input {
+    height: 44px;
+    padding: 0 16px;
+    font-size: 16px;
+}
+
+.message-input button {
+    width: 44px;
+    height: 44px;
+    padding: 0;
+    border-radius: 50%;
+}
+
+/* Message Bubbles */
+.message {
+    margin: 4px 0;
+    max-width: 85%;
+}
+
+.message-bubble {
+    padding: 8px 12px;
+    font-size: 15px;
+}
+
+/* Touch Feedback */
+.chat-list-item:active,
+.nav-button:active,
+.action-btn:active {
+    opacity: 0.7;
+}
+
+/* Smooth Scrolling */
+#messagesContainer {
+    scroll-behavior: smooth;
+    -webkit-overflow-scrolling: touch;
+}
+
+/* Status Bar Integration */
+.chat-header {
+    padding-top: env(safe-area-inset-top);
+    background: linear-gradient(135deg, var(--accent-color), var(--primary-color));
+}
+
+.mobile-nav {
+    padding-bottom: env(safe-area-inset-bottom);
+}
+
+/* Loading States */
+.loading {
+    opacity: 0.7;
+    pointer-events: none;
+}
+
+/* Mobile Gestures */
+.sidebar,
+.chat-area {
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.sidebar.sliding-out {
+    transform: translateX(-100%);
+}
+
+.chat-area.sliding-in {
+    transform: translateX(0);
+}
+
+/* Enhanced Mobile File Upload Button in Dark Mode */
+@media (max-width: 768px) {
+    /* Remove duplicate dark mode file section */
+    
+    /* Keep other mobile dark mode styles */
+    .dark-mode .message-input {
+        background: rgba(15, 23, 42, 0.98);
+        border-top-color: rgba(255, 255, 255, 0.1);
+    }
+
+    .dark-mode .message-input input {
+        background: rgba(30, 41, 59, 0.95);
+        border-color: rgba(255, 255, 255, 0.1);
+        color: var(--text-dark);
+    }
+
+    /* ...rest of existing mobile dark mode styles... */
+}
+
+/* ...rest of existing code... */
